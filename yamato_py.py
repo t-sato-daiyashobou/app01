@@ -4,26 +4,20 @@ import urllib3
 from bs4 import BeautifulSoup
 
 
-class YamatoAdapter(requests.adapters.HTTPAdapter):
-    def init_poolmanager(self, connections, maxsize, block=False):
-        ctx = ssl.create_default_context()
-        # add AESGCM, !PSK
-        ctx.set_ciphers(
-            "@SECLEVEL=2:ECDH+AESGCM:ECDH+CHACHA20:ECDH+AES:DHE+AES:AESGCM:!aNULL:!eNULL:!aDSS:!SHA1:!AESCCM:!PSK"
-        )
-
-        self.poolmanager = urllib3.PoolManager(
-            num_pools=connections,
-            maxsize=maxsize,
-            block=block,
-            ssl_version=ssl.PROTOCOL_TLSv1_2,
-            ssl_context=ctx,
-        )
-
-
 if __name__ == "__main__":
+    ctx = ssl.create_default_context()
+    ctx.set_ciphers('AESGCM')
+    
+    adapter = requests.adapters.HTTPAdapter()
+    adapter.poolmanager = urllib3.PoolManager(
+        ssl_version=ssl.PROTOCOL_TLSv1_2,
+        ssl_context=ctx
+    )
+
     session = requests.Session()
-    session.mount("https://", YamatoAdapter())
+    session.verify = True
+    session.mount('https://', adapter)
+    
 
     url = "https://inter-consistent2.kuronekoyamato.co.jp/consistent2/cts"
     payload = r"""<?xml version="1.0" encoding="UTF-8"?>    
